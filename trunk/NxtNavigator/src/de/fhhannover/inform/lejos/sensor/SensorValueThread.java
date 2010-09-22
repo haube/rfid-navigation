@@ -24,10 +24,12 @@ public class SensorValueThread extends Thread {
     public boolean collectLight = true;
     public boolean collectCompass = true;
     public boolean silent = true;
+    private int currentLightValue =0 ;
+    private float currentDirectionValue =0 ;
 
-    public SensorValueThread(CompassSensor c, LightSensor l, int x) {
-        compassArray = new float[x];
-        lightArray = new int[x];
+    public SensorValueThread(CompassSensor c, LightSensor l, int arraysize) {
+        compassArray = new float[arraysize];
+        lightArray = new int[arraysize];
         this.compass = c;
         this.light = l;
         this.light.activate(true);
@@ -45,19 +47,20 @@ public class SensorValueThread extends Thread {
         while (running) {
 
             try {
-
+                currentDirectionValue = compass.getLejosSensor().getDegreesCartesian();
+                currentLightValue = light.getLejosSensor().getNormalizedLightValue();
                 if (compass != null && collectCompass) {
-                    compassArray[compasArrayIndex] = compass.getLejosSensor().getDegreesCartesian();
+                    compassArray[compasArrayIndex] = currentDirectionValue;
                     compasArrayIndex++;
                     compasArrayIndex = compasArrayIndex % compassArray.length;
                 }
                 if (light != null && collectLight) {
-                    lightArray[lightArrayIndex] = light.getLejosSensor().getNormalizedLightValue();
+                    lightArray[lightArrayIndex] = currentLightValue;
                     lightArrayIndex++;
                     lightArrayIndex = lightArrayIndex % lightArray.length;
                 }
                 if (!silent) {
-                    RConsole.println("current : " + light.getValue() + "avg light: " + getAvgLight() + "\tavg cmp: " + getAvgCompass());
+                    RConsole.println("current : " + currentLightValue + "avg light: " + getAvgLight() + "\tavg cmp: " + getAvgCompass());
                 }
                 this.sleep(100);
 
@@ -100,4 +103,13 @@ public class SensorValueThread extends Thread {
     public void setLight(LightSensor light) {
         this.light = light;
     }
+
+    public float getCurrentDirectionValue() {
+        return currentDirectionValue;
+    }
+
+    public int getCurrentLightValue() {
+        return currentLightValue;
+    }
+    
 }

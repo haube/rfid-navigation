@@ -16,7 +16,7 @@ public enum Action {
     ONLINE("online",2),
     ONTRACK("ontrack",3),
     OFFLINE("offline",4),
-   OFFTRACK("offtrack",4);
+   OFFTRACK("offtrack",5);
     int actionCode;
     String identifier;
 

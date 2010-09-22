@@ -20,6 +20,7 @@ import de.fhhannover.lejos.util.navigation.Action;
 import de.fhhannover.lejos.util.navigation.rfid.Map;
 import de.fhhannover.lejos.util.navigation.rfid.Tag;
 import java.util.ArrayList;
+import lejos.nxt.Button;
 import lejos.nxt.comm.RConsole;
 
 /**
@@ -33,6 +34,8 @@ public enum Controller {
     public boolean silent = false;
     public float direction = 0f;
     public Tag targetTag = null;
+    public Tag lastTag = null;
+
     public ArrayList<Action> currentActions = new ArrayList<Action>();
     public Task currentTask = null;
     public ArrayList<Task> futureTasks = new ArrayList<Task>();
@@ -94,8 +97,32 @@ public enum Controller {
         return status;
     }
 
+
+    public Tag getLastTag() {
+        return lastTag;
+    }
+
+    public void setLastTag(Tag lastTag) {
+        this.lastTag = lastTag;
+    }
+
+    public NxtRobot getRobot() {
+        return robot;
+    }
+
+    public void setRobot(NxtRobot robot) {
+        this.robot = robot;
+    }
+
     public void setStatus(Status status) {
-        this.status = status;
+        if (status != null) {
+            if (this.status != null) {
+                RConsole.println("Status changed, from: " + Status.getRefById(this.status.getId()) + " to: " + Status.getRefById(status.getId()));
+            } else {
+                RConsole.println("Status set to: " + Status.getRefById(status.getId()));
+            }
+            this.status = status;
+        }
     }
 
     public Tag getTargetTag() {
@@ -149,34 +176,38 @@ public enum Controller {
 
     private void initMap(Map map) {
         RConsole.println("creating map");
-        map.addTag(new Tag(0, new Long(103546521654641L), 0, 0));
-        map.addTag(new Tag(1, new Long(203546521654641L), 0, 1));
-        map.addTag(new Tag(2, new Long(303546521654641L), 0, 2));
-        map.addTag(new Tag(3, new Long(403546521654641L), 0, 3));
-        map.addTag(new Tag(4, new Long(503546521654641L), 0, 4));
-        map.addTag(new Tag(5, new Long(603546521654641L), 1, 0));
-        map.addTag(new Tag(6, new Long(703546521654641L), 1, 1));
-        map.addTag(new Tag(7, new Long(803546521654641L), 1, 2));
-        map.addTag(new Tag(8, new Long(903546521654641L), 1, 3));
-        map.addTag(new Tag(9, new Long(1003546521654641L), 1, 4));
-        map.addTag(new Tag(10, new Long(113546521654641L), 2, 0));
-        map.addTag(new Tag(11, new Long(123546521654641L), 2, 1));
-        map.addTag(new Tag(12, new Long(133546521654641L), 2, 2));
-        map.addTag(new Tag(13, new Long(143546521654641L), 2, 3));
-        map.addTag(new Tag(14, new Long(153546521654641L), 2, 4));
-        map.addTag(new Tag(15, new Long(163546521654641L), 3, 0));
-        map.addTag(new Tag(16, new Long(173546521654641L), 3, 1));
-        map.addTag(new Tag(17, new Long(183546521654641L), 3, 2));
-        map.addTag(new Tag(18, new Long(193546521654641L), 3, 3));
-        map.addTag(new Tag(19, new Long(203546521654641L), 3, 4));
+        map.addTag(new Tag(0, new Long(51846709328L), 0, 0));
+        map.addTag(new Tag(1, new Long(788265762896L), 0, 1));
+        map.addTag(new Tag(2, new Long(264648851536L), 0, 2));
+        map.addTag(new Tag(3, new Long(1016654004304L), 0, 3));
+        map.addTag(new Tag(4, new Long(932398891088L), 0, 4));
+        map.addTag(new Tag(5, new Long(1065660317776L), 1, 0));
+        map.addTag(new Tag(6, new Long(137544728656L), 1, 1));
+        map.addTag(new Tag(7, new Long(532614611024L), 1, 2));
+        map.addTag(new Tag(8, new Long(580178018384L), 1, 3));
+        map.addTag(new Tag(9, new Long(756288454736L), 1, 4));
+        map.addTag(new Tag(10, new Long(623027028048L), 2, 0));
+        map.addTag(new Tag(11, new Long(404067582032L), 2, 1));
+        map.addTag(new Tag(12, new Long(616869724240L), 2, 2));
+        map.addTag(new Tag(13, new Long(574020714576L), 2, 3));
+        map.addTag(new Tag(14, new Long(612155326544L), 2, 4));
+        map.addTag(new Tag(15, new Long(488322695248L), 3, 0));
+        map.addTag(new Tag(16, new Long(312212258896L), 3, 1));
+        map.addTag(new Tag(17, new Long(136101822544L), 3, 2));
+        map.addTag(new Tag(18, new Long(884835483728L), 3, 3));
+        map.addTag(new Tag(19, new Long(835829170256L), 3, 4));
     }
 
-    public void calibrate(){
-        
+    public void calibrate() {
+        this.setStatus(Status.CALIBRATE);
+        RConsole.println("Calibration started, press ENTER to begin");
+        Button.ENTER.waitForPressAndRelease();
+        Tools.delay(5000);
+        RConsole.println("Calibration finished");
     }
 
     public void start() {
-        RConsole.println("Starting in IDLE mode");
+        RConsole.println("Starting Operation in IDLE mode");
         this.setStatus(Status.IDLE);
         this.setRunning(true);
         Mover.INSTANCE.setRunning(true);
@@ -184,15 +215,14 @@ public enum Controller {
         dt.run = true;
         svt.start();
         dt.start();
-
     }
 
     public void stop() {
         RConsole.println("Shutting down");
         this.setStatus(Status.EXIT);
         this.setRunning(false);
-        dt.silent = false;
-        svt.silent = false;
+        dt.silent = true;
+        svt.silent = true;
         dt.run = false;
         svt.running = false;
         Mover.INSTANCE.setRunning(false);
@@ -201,7 +231,7 @@ public enum Controller {
         svt.interrupt();
 
         Tools.delay(1000);
-        
+
         robot.exit();
     }
 }
