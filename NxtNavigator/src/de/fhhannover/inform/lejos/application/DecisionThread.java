@@ -5,7 +5,7 @@
 package de.fhhannover.inform.lejos.application;
 
 import ch.aplu.nxt.Tools;
-import de.fhhannover.inform.lejos.action.Mover;
+import lejos.nxt.comm.RConsole;
 
 /**
  *
@@ -23,8 +23,32 @@ public class DecisionThread extends Thread {
 
     public void run() {
         while (run) {
-          Mover.INSTANCE.getGear().forward();
-          Tools.delay(5000);
+            int statusId = Controller.INSTANCE.getStatus().getId();
+
+            if(statusId == Status.INIT.id){
+                // nichts zu tun
+                
+            }else if (statusId == Status.CALIBRATE.id) {
+               
+
+            }else if(statusId == Status.IDLE.id){
+                // warte auf Aufgaben
+
+            }else if(statusId == Status.LOCALIZE.id){
+                //Tag gefunden bestimme seine Position und veranlasse weiteres
+
+            }else if(statusId == Status.GLOBAL.id){
+                // position bekannt, bestimme direction zum Ziel
+
+            }else if(statusId == Status.LOCAL.id){
+                //Fahre bis zu dem Nächsten RFID Tag
+                // -> Follow Line, keep direction
+                
+
+            }else if(statusId == Status.EXIT.id){
+                // programm wird beendet, nichts zu tun
+            }
+            Tools.delay(100);
         }
     }
 }

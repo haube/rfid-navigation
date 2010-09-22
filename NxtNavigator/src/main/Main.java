@@ -22,6 +22,7 @@ public class Main {
     public static void main(String[] args) throws InterruptedException {
         //initialisieren
         Controller.INSTANCE.init(20,MotorPort.B,MotorPort.C,SensorPort.S2,SensorPort.S3,SensorPort.S1);
+        Controller.INSTANCE.calibrate();
         Controller.INSTANCE.start();
         Button.ESCAPE.waitForPressAndRelease();
         Controller.INSTANCE.stop();
