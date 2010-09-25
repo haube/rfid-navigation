@@ -29,12 +29,21 @@ public class DecisionThread extends Thread {
         while (run) {
             int statusId = Controller.INSTANCE.getStatus().getId();
             ArrayList<Action> actions = Controller.INSTANCE.getCurrentActions();
+            for (Iterator<Action> it = actions.iterator(); it.hasNext();) {
+                Action action = it.next();
+                RConsole.print(action.getIdentifier()+"; ");
+            }
+                RConsole.print("\n");
+            
             if (statusId == Status.INIT.id) {
                 // nichts zu tun
             } else if (statusId == Status.CALIBRATE.id) {
             } else if (statusId == Status.IDLE.id) {
             } else if (statusId == Status.LOCALIZE.id) {
                 //Tag gefunden bestimme seine Position und veranlasse weiteres
+                Mover.INSTANCE.stop();
+                Mover.INSTANCE.getOverTag();
+                Controller.INSTANCE.setStatus(Status.GLOBAL);
             } else if (statusId == Status.GLOBAL.id) {
                 // position bekannt, bestimme direction zum Ziel
             } else if (statusId == Status.LOCAL.id) {
@@ -42,19 +51,28 @@ public class DecisionThread extends Thread {
                 // -> Follow Line, keep direction
 
                 // bestimme Action
-                if(Controller.INSTANCE.svt.getCurrentLightValue()-20 < Controller.INSTANCE.svt.getAvgLight()){
-                    Controller.INSTANCE.addAction(Action.OFFTRACK);
+                if (Controller.INSTANCE.svt.getAvgLight() - 40 < Controller.INSTANCE.svt.getCurrentLightValue()) {
+                    Controller.INSTANCE.removeAction(Action.OFFTRACK);
                     Controller.INSTANCE.addAction(Action.ONTRACK);
+                    Controller.INSTANCE.svt.collectLight = false;
+                } else {
+                    Controller.INSTANCE.svt.collectLight = true;
+                    Controller.INSTANCE.removeAction(Action.ONTRACK);
+                    Controller.INSTANCE.addAction(Action.OFFTRACK);
                 }
-
+                if (actions.contains(Action.RFIDFOUND)) {
+                    Controller.INSTANCE.setStatus(Status.LOCALIZE);
+                    Controller.INSTANCE.removeAction(Action.ONTRACK);
+                    Controller.INSTANCE.removeAction(Action.OFFTRACK);
+                    Controller.INSTANCE.svt.collectLight = false;
+                    Mover.INSTANCE.stop();
+                }
 
                 if (actions.contains(Action.OFFTRACK)) {
                     Controller.INSTANCE.svt.collectLight = false;
-                     Mover.INSTANCE.sweep();
-                }else if(actions.contains(Action.RFIDFOUND)){
-                    Controller.INSTANCE.setStatus(Status.LOCALIZE);
-                    Mover.INSTANCE.stop();
-                } else {
+                    Mover.INSTANCE.sweep();
+                } else if(actions.contains(Action.ONTRACK)) {
+                    Controller.INSTANCE.svt.collectLight = true;
                     Mover.INSTANCE.forward();
                 }
 

@@ -16,16 +16,18 @@ import lejos.nxt.comm.RConsole;
  * @author Michael Antemann <antemann.michael at gmail.com>
  */
 public class RFIDListener implements ch.aplu.nxt.RFIDListener {
-static Tag current = null;
+
+    static Tag current = null;
+
     public void detected(SensorPort port, long id) {
         Tag found = Map.SMALL.getById(id);
         if (found == null) {
-            RConsole.println("Unbekannten Tag gefunden: " +id);
-        }else if(current== found){
-            RConsole.println("Tag bereits erfasst" + found.reference + "\tx:" + found.x + "\ty:" +found.y);
-              current = found;
-        }else if(current != found){
-            RConsole.println("Neuer Tag" + found.reference + "\tx:" + found.x + "\ty:" +found.y);
+            RConsole.println("Unbekannten Tag gefunden: " + id);
+        } else if (current == found) {
+            RConsole.println("Tag bereits erfasst" + found.reference + "\tx:" + found.x + "\ty:" + found.y);
+            current = found;
+        } else if (current != found) {
+            RConsole.println("Neuer Tag" + found.reference + "\tx:" + found.x + "\ty:" + found.y);
             Controller.INSTANCE.currentActions.add(Action.RFIDFOUND);
             current = found;
         }
