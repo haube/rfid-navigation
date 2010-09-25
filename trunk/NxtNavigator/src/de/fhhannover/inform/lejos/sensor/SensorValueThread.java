@@ -6,6 +6,7 @@ package de.fhhannover.inform.lejos.sensor;
 
 import ch.aplu.nxt.CompassSensor;
 import ch.aplu.nxt.LightSensor;
+import ch.aplu.nxt.Tools;
 import lejos.nxt.comm.RConsole;
 
 /**
@@ -26,6 +27,7 @@ public class SensorValueThread extends Thread {
     public boolean silent = true;
     private int currentLightValue =0 ;
     private float currentDirectionValue =0 ;
+    public float threshold;
 
     public SensorValueThread(CompassSensor c, LightSensor l, int arraysize) {
         compassArray = new float[arraysize];
@@ -36,7 +38,9 @@ public class SensorValueThread extends Thread {
         for (int i = 0; i < compassArray.length; i++) {
             compassArray[i] = compass.getLejosSensor().getDegreesCartesian();
             lightArray[i] = light.getLejosSensor().getNormalizedLightValue();
+            Tools.delay(100);
         }
+        threshold = this.getAvgLight() -30;
     }
 
     public void run() {
