@@ -6,9 +6,14 @@ package de.fhhannover.inform.lejos.application;
 
 import ch.aplu.nxt.Tools;
 import de.fhhannover.inform.lejos.action.Mover;
+import de.fhhannover.inform.lejos.comm.Type;
+
+import de.fhhannover.inform.lejos.sensor.RFIDListener;
 import de.fhhannover.lejos.util.navigation.Action;
+import de.fhhannover.lejos.util.navigation.Direction;
+import de.fhhannover.lejos.util.navigation.rfid.Map;
+import de.fhhannover.lejos.util.navigation.rfid.Tag;
 import java.util.ArrayList;
-import java.util.Iterator;
 import lejos.nxt.comm.RConsole;
 
 /**
@@ -25,33 +30,98 @@ public class DecisionThread extends Thread {
     public DecisionThread() {
     }
 
+    boolean ontrack() {
+        return (Controller.INSTANCE.svt.getAvgLight() - 40 < Controller.INSTANCE.svt.getCurrentLightValue()); //withe
+//        return (Controller.INSTANCE.svt.getAvgLight() + 40 > Controller.INSTANCE.svt.getCurrentLightValue()); // black
+    }
+
     public void run() {
         while (run) {
             int statusId = Controller.INSTANCE.getStatus().getId();
             ArrayList<Action> actions = Controller.INSTANCE.getCurrentActions();
-            for (Iterator<Action> it = actions.iterator(); it.hasNext();) {
-                Action action = it.next();
-                RConsole.print(action.getIdentifier()+"; ");
-            }
-                RConsole.print("\n");
-            
+
+
             if (statusId == Status.INIT.id) {
                 // nichts zu tun
             } else if (statusId == Status.CALIBRATE.id) {
             } else if (statusId == Status.IDLE.id) {
+
+                Controller.INSTANCE.setNextTask();
+
+
+                if (null != Controller.INSTANCE.getCurrentTask() && Controller.INSTANCE.getCurrentTask().getType().equals(Type.TARGET)) {
+                    RConsole.println("targi");
+                    Controller.INSTANCE.setTargetTag(Map.SMALL.getByRef(Controller.INSTANCE.getCurrentTask().getMessage().getValue()));
+                    RConsole.println("target set");
+                    RConsole.println("target: " + Controller.INSTANCE.getTargetTag().getReference());
+                    Controller.INSTANCE.setStatus(Status.GLOBAL);
+                }
             } else if (statusId == Status.LOCALIZE.id) {
                 //Tag gefunden bestimme seine Position und veranlasse weiteres
                 Mover.INSTANCE.stop();
                 Mover.INSTANCE.getOverTag();
+                Controller.INSTANCE.setLastTag(RFIDListener.current);
                 Controller.INSTANCE.setStatus(Status.GLOBAL);
+                Controller.INSTANCE.removeAction(Action.RFIDFOUND);
+
             } else if (statusId == Status.GLOBAL.id) {
                 // position bekannt, bestimme direction zum Ziel
+                RConsole.println("Begin global");
+
+                if (Map.SMALL.getDummy().equals(Controller.INSTANCE.getLastTag())) {
+                    RConsole.println("if");
+                    Controller.INSTANCE.setStatus(Status.LOCAL);
+                } else if ((Controller.INSTANCE.getLastTag().equals(Controller.INSTANCE.getTargetTag()))) {
+                    RConsole.println("else if");
+                    Controller.INSTANCE.getRobot().playTone(600, 500);
+                    Tools.delay(1000);
+                    Controller.INSTANCE.setCurrentTask(null);
+                } else {
+                    RConsole.println("else:");
+                    //bestimme position und richtung und gehe über zu navigation
+                    Tag target = Controller.INSTANCE.getTargetTag();
+                    Tag current = Controller.INSTANCE.getLastTag();
+
+                    if (current.x < target.x) {
+                        Controller.INSTANCE.setDirection(Direction.WEST);
+                    } else if (current.x > target.x) {
+                        Controller.INSTANCE.setDirection(Direction.EAST);
+                    } else {
+                        if (current.y < target.y) {
+                            Controller.INSTANCE.setDirection(Direction.NORTH);
+                        } else if (current.y > target.y) {
+                            Controller.INSTANCE.setDirection(Direction.SOUTH);
+                        }
+                    }
+
+                    if (Controller.INSTANCE.getDirection().inSector(Controller.INSTANCE.svt.getCurrentDirectionValue())) {
+                        RConsole.println("richtiger sektor");
+                        Controller.INSTANCE.removeAction(Action.TURNING);
+                        Mover.INSTANCE.stop();
+                        Controller.INSTANCE.setStatus(Status.LOCAL);
+                    } else {
+                        RConsole.println("nicht richtige richtung");
+                        Controller.INSTANCE.addAction(Action.TURNING);
+                        Mover.INSTANCE.turnToDirection(Controller.INSTANCE.getDirection(), Controller.INSTANCE.svt.getCurrentDirectionValue());
+                    }
+
+                    if (Controller.INSTANCE.getDirection().inSector(Controller.INSTANCE.svt.getAvgCompass())
+                            && !(ontrack())) {
+                        Mover.INSTANCE.stop();
+                        Controller.INSTANCE.setStatus(Status.LOCAL);
+                    } else {
+                        RConsole.println("sweepe");
+                        Mover.INSTANCE.sweep();
+                    }
+                    // wenn richtung stimmt und linie über sensor wechsle status
+                    //ansonsten richte aus
+                }
             } else if (statusId == Status.LOCAL.id) {
                 //Fahre bis zu dem Nächsten RFID Tag
                 // -> Follow Line, keep direction
 
                 // bestimme Action
-                if (Controller.INSTANCE.svt.getAvgLight() - 40 < Controller.INSTANCE.svt.getCurrentLightValue()) {
+                if (ontrack()) {
                     Controller.INSTANCE.removeAction(Action.OFFTRACK);
                     Controller.INSTANCE.addAction(Action.ONTRACK);
                     Controller.INSTANCE.svt.collectLight = false;
@@ -71,7 +141,7 @@ public class DecisionThread extends Thread {
                 if (actions.contains(Action.OFFTRACK)) {
                     Controller.INSTANCE.svt.collectLight = false;
                     Mover.INSTANCE.sweep();
-                } else if(actions.contains(Action.ONTRACK)) {
+                } else if (actions.contains(Action.ONTRACK)) {
                     Controller.INSTANCE.svt.collectLight = true;
                     Mover.INSTANCE.forward();
                 }

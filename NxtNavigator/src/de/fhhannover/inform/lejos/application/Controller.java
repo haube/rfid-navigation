@@ -17,10 +17,10 @@ import de.fhhannover.inform.lejos.comm.Task;
 import de.fhhannover.inform.lejos.sensor.RFIDListener;
 import de.fhhannover.inform.lejos.sensor.SensorValueThread;
 import de.fhhannover.lejos.util.navigation.Action;
+import de.fhhannover.lejos.util.navigation.Direction;
 import de.fhhannover.lejos.util.navigation.rfid.Map;
 import de.fhhannover.lejos.util.navigation.rfid.Tag;
 import java.util.ArrayList;
-import lejos.nxt.Button;
 import lejos.nxt.comm.RConsole;
 
 /**
@@ -32,10 +32,9 @@ public enum Controller {
     INSTANCE;
     public boolean running = false;
     public boolean silent = false;
-    public float direction = 0f;
+    public Direction direction = Direction.NORTH;
     public Tag targetTag = null;
-    public Tag lastTag = null;
-
+    public Tag lastTag = Map.SMALL.getDummy();
     public ArrayList<Action> currentActions = new ArrayList<Action>();
     public Task currentTask = null;
     public ArrayList<Task> futureTasks = new ArrayList<Task>();
@@ -46,47 +45,79 @@ public enum Controller {
     protected DecisionThread dt = null;
 
     public ArrayList<Action> getCurrentActions() {
-        synchronized(currentActions){
-        return new ArrayList<Action>(currentActions);
+        synchronized (currentActions) {
+            return new ArrayList<Action>(currentActions);
         }
     }
 
-    public void addAction(Action a){
-        synchronized(currentActions){
-        if(currentActions.contains(a)){
-            return;
-        }
-        currentActions.add(a);
-        }
-    }
-    public void removeAction(Action a){
-        synchronized(currentActions){
-        currentActions.remove(a);
+    public void addAction(Action a) {
+        synchronized (currentActions) {
+            if (currentActions.contains(a)) {
+                return;
+            }
+//            RConsole.println("Adding" + a.getIdentifier());
+            currentActions.add(a);
         }
     }
-    
+
+    public void removeAction(Action a) {
+        synchronized (currentActions) {
+            currentActions.remove(a);
+//            RConsole.println("Removing: " + a.getIdentifier());
+        }
+    }
+
     public void setCurrentActions(ArrayList<Action> currentActions) {
         this.currentActions = currentActions;
     }
 
     public Task getCurrentTask() {
+        synchronized(currentTask){
         return currentTask;
+        }
     }
 
     public void setCurrentTask(Task currentTask) {
+        synchronized(this){
         this.currentTask = currentTask;
+        }
     }
 
-    public float getDirection() {
+    public Direction getDirection() {
         return direction;
     }
 
-    public void setDirection(float direction) {
+    public void setDirection(Direction direction) {
         this.direction = direction;
     }
 
+    public void addTask(Task t) {
+        RConsole.println("Auftrag erhalten: "+t.getType().name() +
+                " " + t.getMessage().value);
+            futureTasks.add(t);
+    }
+
+    public Task getNextTask() {
+        if (futureTasks.isEmpty()) {
+            return null;
+        } else {
+            return futureTasks.get(0);
+        }
+    }
+
+    public void setNextTask() {
+            if (currentTask == null && futureTasks.size()>0) {
+                currentTask = futureTasks.remove(0);
+                RConsole.println("setze task "+ currentTask.getMessage().value);
+            }else{
+                RConsole.println("setze task null");
+                currentTask = null;
+            }
+
+    }
+
     public ArrayList<Task> getFutureTasks() {
-        return futureTasks;
+        return new ArrayList<Task> (futureTasks);
     }
 
     public void setFutureTasks(ArrayList<Task> futureTasks) {
@@ -112,7 +143,6 @@ public enum Controller {
     public Status getStatus() {
         return status;
     }
-
 
     public Tag getLastTag() {
         return lastTag;
@@ -194,7 +224,7 @@ public enum Controller {
         map.addTag(new Tag(0, new Long(51846709328L), 0, 0));
         map.addTag(new Tag(1, new Long(788265762896L), 0, 1));
         map.addTag(new Tag(2, new Long(264648851536L), 0, 2));
-//        map.addTag(new Tag(3, new Long(1016654004304L), 0, 3));
+        map.addTag(new Tag(3, new Long(1016654004304L), 0, 3));
 //        map.addTag(new Tag(4, new Long(932398891088L), 0, 4));
         map.addTag(new Tag(5, new Long(1065660317776L), 1, 0));
         map.addTag(new Tag(6, new Long(137544728656L), 1, 1));
@@ -217,7 +247,7 @@ public enum Controller {
         this.setStatus(Status.CALIBRATE);
         RConsole.println("Calibration started, press ENTER to begin");
 //        Button.ENTER.waitForPressAndRelease();
-   //     Tools.delay(5000);
+        //     Tools.delay(5000);
         RConsole.println("Calibration finished");
     }
 
@@ -248,7 +278,7 @@ public enum Controller {
         svt.interrupt();
         Mover.INSTANCE.shutdown();
         Tools.delay(1000);
-
+        RConsole.close();
         robot.exit();
     }
 }

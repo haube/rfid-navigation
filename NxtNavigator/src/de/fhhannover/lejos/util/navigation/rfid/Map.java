@@ -16,7 +16,7 @@ public enum Map {
     SMALL(4, 5);
     ArrayList<Tag> tags = new ArrayList<Tag>();
     Tag[][] map = null;
-
+    static Tag dummy = new Tag(-1,new Long(0),-1,-1);
     Map(int x, int y) {
         map = new Tag[x][y];
     }
@@ -36,4 +36,25 @@ public enum Map {
         return null;
 
     }
+
+        public Tag getByRef(int ref) {
+        for (Iterator<Tag> it = tags.iterator(); it.hasNext();) {
+            Tag tag = it.next();
+            if (tag.getReference() == ref) {
+                return tag;
+            }
+        }
+        return null;
+
+    }
+
+    public static Tag getDummy() {
+        return dummy;
+    }
+
+    public static void setDummy(Tag dummy) {
+        Map.dummy = dummy;
+    }
+
+    
 }

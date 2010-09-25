@@ -48,7 +48,7 @@ public enum Direction {
         this.rightIntervall = rightIntervall;
     }
 
-    public boolean inSector(int i) {
+    public boolean inSector(float i) {
         i = i % 360;
         if (i > leftIntervall && i < rightIntervall) {
             return true;

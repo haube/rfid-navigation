@@ -12,6 +12,7 @@ package de.fhhannover.lejos.util.navigation;
 public enum Action {
 
     SWEEPING("sweeping",0),
+    TURNING("turning",6),
     RFIDFOUND("foundrfid",1),
     ONLINE("online",2),
     ONTRACK("ontrack",3),
