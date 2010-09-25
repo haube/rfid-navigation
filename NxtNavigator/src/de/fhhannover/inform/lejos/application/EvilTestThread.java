@@ -5,6 +5,7 @@
 package de.fhhannover.inform.lejos.application;
 
 import ch.aplu.nxt.Tools;
+import de.fhhannover.lejos.util.navigation.Action;
 
 /**
  *
@@ -13,22 +14,23 @@ import ch.aplu.nxt.Tools;
 public class EvilTestThread extends Thread {
 
     public void run() {
+        Action[] actions = Action.values();
         while (true) {
-            Thread.yield();
-            Controller.INSTANCE.setStatus(Status.INIT);
-            Thread.yield();
-            Controller.INSTANCE.setStatus(Status.CALIBRATE);
-            Thread.yield();
-            Controller.INSTANCE.setStatus(Status.EXIT);
-            Thread.yield();
-            Controller.INSTANCE.setStatus(Status.IDLE);
-            Thread.yield();
-            Controller.INSTANCE.setStatus(Status.LOCAL);
-            Thread.yield();
-            Controller.INSTANCE.setStatus(Status.LOCALIZE);
-            Thread.yield();
-            Controller.INSTANCE.setStatus(Status.GLOBAL);
-            Thread.yield();
+
+
+            for (int i = 0; i < actions.length; i++) {
+                Action action = actions[i];
+                Controller.INSTANCE.addAction(action);
+                Thread.yield();
+            }
+            Tools.delay(60);
+            for (int i = 0; i < actions.length; i++) {
+                Action action = actions[i];
+                Controller.INSTANCE.removeAction(action);
+                Thread.yield();
+            }
+            Tools.delay(90);
+
         }
     }
 }
