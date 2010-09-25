@@ -17,7 +17,7 @@ import lejos.nxt.comm.RConsole;
  */
 public class RFIDListener implements ch.aplu.nxt.RFIDListener {
 
-    static Tag current = null;
+   public  static Tag current = null;
 
     public void detected(SensorPort port, long id) {
         Tag found = Map.SMALL.getById(id);

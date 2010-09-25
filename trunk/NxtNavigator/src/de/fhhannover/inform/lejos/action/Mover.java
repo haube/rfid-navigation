@@ -7,6 +7,9 @@ package de.fhhannover.inform.lejos.action;
 import ch.aplu.nxt.Gear;
 import ch.aplu.nxt.MotorPort;
 import ch.aplu.nxt.Tools;
+import de.fhhannover.lejos.util.navigation.Direction;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -144,6 +147,36 @@ public enum Mover {
 
 
 
+    }
+
+    public void turnToDirection(Direction direction) {
+    }
+
+    public void turnToDirection(Direction target, float direction) {
+    }
+
+    public class TurningThread extends Thread {
+
+        public boolean run = false;
+        public int initial = 25;
+        public int sweep = initial;
+
+        public void run() {
+            while (true) {
+
+                while (run) {
+                    gear.turnTo(460, true);
+                    Tools.delay(200);
+                }
+
+                synchronized (this) {
+                    try {
+                        wait();
+                    } catch (InterruptedException ex) {
+                    }
+                }
+            }
+        }
     }
 
     public class SweeperThread extends Thread {

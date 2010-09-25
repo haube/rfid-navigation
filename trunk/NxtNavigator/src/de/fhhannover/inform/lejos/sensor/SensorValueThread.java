@@ -35,6 +35,7 @@ public class SensorValueThread extends Thread {
         this.compass = c;
         this.light = l;
         this.light.activate(true);
+        compass.getLejosSensor().resetCartesianZero();
         for (int i = 0; i < compassArray.length; i++) {
             compassArray[i] = compass.getLejosSensor().getDegreesCartesian();
             lightArray[i] = light.getLejosSensor().getNormalizedLightValue();
