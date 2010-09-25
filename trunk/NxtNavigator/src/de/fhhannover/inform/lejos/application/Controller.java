@@ -46,9 +46,25 @@ public enum Controller {
     protected DecisionThread dt = null;
 
     public ArrayList<Action> getCurrentActions() {
-        return currentActions;
+        synchronized(currentActions){
+        return new ArrayList<Action>(currentActions);
+        }
     }
 
+    public void addAction(Action a){
+        synchronized(currentActions){
+        if(currentActions.contains(a)){
+            return;
+        }
+        currentActions.add(a);
+        }
+    }
+    public void removeAction(Action a){
+        synchronized(currentActions){
+        currentActions.remove(a);
+        }
+    }
+    
     public void setCurrentActions(ArrayList<Action> currentActions) {
         this.currentActions = currentActions;
     }
@@ -215,6 +231,7 @@ public enum Controller {
         dt.run = true;
         svt.start();
         dt.start();
+
     }
 
     public void stop() {

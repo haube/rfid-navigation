@@ -45,4 +45,13 @@ public enum Mover {
     public void setRunning(boolean b) {
         this.running = b;
     }
+
+    public void forward() {
+    }
+
+    public void sweep() {
+    }
+
+    public void stop() {
+    }
 }
