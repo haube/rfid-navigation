@@ -10,6 +10,7 @@ import ch.aplu.nxt.Tools;
 import de.fhhannover.lejos.util.navigation.Direction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import lejos.nxt.comm.RConsole;
 
 /**
  *
@@ -78,13 +79,9 @@ public enum Mover {
             if (st.run == true) {
             } else {
                 synchronized (st) {
-                    st.notifyAll();
-
-
+                    st.notify();
                 }
                 return;
-
-
             }
         } else {
             this.resetMove();
@@ -141,7 +138,7 @@ public enum Mover {
     }
 
     public void getOverTag() {
-        gear.forward(100);
+        gear.forward(300);
         gear.stop();
 
 
@@ -153,6 +150,33 @@ public enum Mover {
     }
 
     public void turnToDirection(Direction target, float direction) {
+        int value = (int) ((target.getDirection() - direction));
+        if (!gear.isMoving()) {
+//            if(value < 15 && value > 0){
+//                value = 25;
+//            }else if(value > -15 && value <0){
+//                value = -25;
+//            }
+            RConsole.println("rotating: " + value);
+            gear.turnTo(value);
+
+        }
+    }
+
+    public void sweepInSector(Direction target, float direction) {
+        if (!gear.isMoving()) {
+            int turn = 30;
+            int value = (int) ((target.getDirection() - direction));
+            if(value >180 ){
+                turn = turn *-1;
+            }
+            gear.turnTo(turn);
+            Thread.yield();
+            Tools.delay(200);
+            gear.turnTo(turn*-1);
+            Thread.yield();
+            Tools.delay(200);
+        }
     }
 
     public class TurningThread extends Thread {
@@ -190,12 +214,8 @@ public enum Mover {
             do {
                 try {
                     while (run) {
-                        gear.left(sweep);
-                        this.yield();
-                        sweep = sweep * (-2);
-                        gear.right(sweep);
-                        this.yield();
-                        sweep = sweep * (-2);
+                        sweep = (int) (sweep * (-1.2));
+                        gear.turnTo(sweep);
                         Tools.delay(initial);
                     }
                     synchronized (this) {
