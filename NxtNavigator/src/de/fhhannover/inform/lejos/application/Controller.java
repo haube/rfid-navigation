@@ -13,7 +13,9 @@ import ch.aplu.nxt.RFIDSensor;
 import ch.aplu.nxt.SensorPort;
 import ch.aplu.nxt.Tools;
 import de.fhhannover.inform.lejos.action.Mover;
+import de.fhhannover.inform.lejos.comm.Message;
 import de.fhhannover.inform.lejos.comm.Task;
+import de.fhhannover.inform.lejos.comm.Type;
 import de.fhhannover.inform.lejos.sensor.RFIDListener;
 import de.fhhannover.inform.lejos.sensor.SensorValueThread;
 import de.fhhannover.lejos.util.navigation.Action;
@@ -44,6 +46,12 @@ public enum Controller {
     protected SensorValueThread svt = null;
     protected DecisionThread dt = null;
 
+    public void clearActions(){
+        synchronized(currentActions){
+            currentActions.clear();
+        }
+    }
+
     public ArrayList<Action> getCurrentActions() {
         synchronized (currentActions) {
             return new ArrayList<Action>(currentActions);
@@ -72,8 +80,13 @@ public enum Controller {
     }
 
     public Task getCurrentTask() {
+
+        if(currentTask!=null){
         synchronized(currentTask){
         return currentTask;
+        }
+        }else{
+            return new Task(Type.QUIT,new Message(2));
         }
     }
 
@@ -106,12 +119,13 @@ public enum Controller {
     }
 
     public void setNextTask() {
-            if (currentTask == null && futureTasks.size()>0) {
+            if (null ==currentTask && futureTasks.size()>0) {
                 currentTask = futureTasks.remove(0);
-                RConsole.println("setze task "+ currentTask.getMessage().value);
+                RConsole.println("New task "+ currentTask.getMessage().value);
             }else{
-                RConsole.println("setze task null");
                 currentTask = null;
+
+
             }
 
     }

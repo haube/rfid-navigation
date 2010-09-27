@@ -41,7 +41,7 @@ public class SensorValueThread extends Thread {
             lightArray[i] = light.getLejosSensor().getNormalizedLightValue();
             Tools.delay(100);
         }
-        threshold = this.getAvgLight() -30;
+        threshold = this.getAvgLight() -60;
     }
 
     public void run() {

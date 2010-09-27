@@ -10,10 +10,10 @@ package de.fhhannover.lejos.util.navigation;
  */
 public enum Direction {
 
-    NORTH(0, -29, 30),
-    EAST(90, 60, 120),
-    WEST(270, 240, 310),
-    SOUTH(180, 150, 210);
+    NORTH(0, -2, 2),
+    EAST(90, 88, 92),
+    WEST(270, 268, 272),
+    SOUTH(180, 178, 182);
     int direction;
     int leftIntervall;
     int rightIntervall;
@@ -50,7 +50,7 @@ public enum Direction {
 
     public boolean inSector(float i) {
         i = i % 360;
-        if (i > leftIntervall && i < rightIntervall) {
+        if (i+360 > leftIntervall+360 && i+360 < rightIntervall+360) {
             return true;
         } else {
             return false;
